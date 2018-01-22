@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
   useMathJax.addEventListener("change", function(event) {
     if (useMathJax.checked && !documentHead.contains(mathJaxScript)) {
       mathJaxScript.type = "text/javascript";
-      mathJaxScript.src  = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=MML_HTMLorMML";
+      mathJaxScript.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=MML_HTMLorMML";
       documentHead.appendChild(mathJaxScript);
     }
 

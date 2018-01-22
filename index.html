@@ -83,17 +83,18 @@
           <h5>npm</h5>
           <pre><code class="language-bash">npm install ascii2mathml
 </code></pre>
-          <pre><code class="language-js"><span class="hljs-keyword">var</span> ascii2mathml = <span class="hljs-built_in">require</span>(<span class="hljs-string">'ascii2mathml'</span>);
+          <pre><code class="language-js"><span class="hljs-keyword">import</span> ascii2mathml <span class="hljs-keyword">from</span> <span class="hljs-string">'ascii2mathml'</span>;
 </code></pre>
           <h5>Client</h5>
           Download <a href="https://raw.githubusercontent.com/runarberg/ascii2mathml/gh-pages/dist/ascii2mathml.js">full</a> or <a href="https://raw.githubusercontent.com/runarberg/ascii2mathml/gh-pages/dist/ascii2mathml.min.js">minified</a> and include the script file
           <pre><code class="language-html">&lt;<span class="hljs-tag">script</span> <span class="hljs-keyword">src</span>=<span class="hljs-string">"ascii2mathml.js"</span>&gt;&lt;/<span class="hljs-tag">script</span>&gt;
+&lt;<span class="hljs-tag">script</span>&gt;<span class="hljs-built_in">window</span>.ascii2mathml = ascii2mathml.default&lt;/<span class="hljs-tag">script</span>&gt;
 </code></pre>
         </section>
 
         <section id="usage">
           <h4>Usage</h4>
-          <pre><code class="language-js"><span class="hljs-keyword">var</span> mathml = ascii2mathml(asciimath [, options]);
+          <pre><code class="language-js">ascii2mathml(asciimath [, options]);
 </code></pre>
           <p>Or on the command line</p>
           <pre><code class="language-bash">npm install -g ascii2mathml
@@ -120,19 +121,21 @@ ascii2mathml [options] -- &lt;expression&gt;
           <p>You can also call <code>ascii2mathml</code> with only a
             configuration object. In that case you’ll be returned a
             new function with the new defaults. For example:</p>
-          <pre><code class="language-js"><span class="hljs-keyword">var</span> ascii2mathml = <span class="hljs-built_in">require</span>(<span class="hljs-string">'ascii2mathml'</span>)({
+          <pre><code class="language-js"><span class="hljs-keyword">import</span> ascii2mathml <span class="hljs-keyword">from</span> <span class="hljs-string">'ascii2mathml'</span>
+
+<span class="hljs-keyword">const</span> mathml = ascii2mathml({
     decimalMark: <span class="hljs-string">','</span>,
     colSep: <span class="hljs-string">';'</span>,        <span class="hljs-comment">// default if `,` is the decimal mark</span>
     rowSep: <span class="hljs-string">';;'</span>        <span class="hljs-comment">// default if `;` is the column separator</span>
 });
 
-ascii2mathml(<span class="hljs-string">'40,2'</span>);
+mathml(<span class="hljs-string">'40,2'</span>);
 <span class="hljs-comment">// &lt;math&gt;&lt;mn&gt;40,2&lt;/mn&gt;&lt;/math&gt;</span>
 
-ascii2mathml(<span class="hljs-string">'(40,2; 3,17; 2,72)'</span>, {bare: <span class="hljs-literal">true</span>});
+mathml(<span class="hljs-string">'(40,2; 3,17; 2,72)'</span>, {bare: <span class="hljs-literal">true</span>});
 <span class="hljs-comment">// &lt;mfenced open=&quot;(&quot; close=&quot;)&quot; separators=&quot;;&quot;&gt;&lt;mn&gt;40,2&lt;/mn&gt;&lt;mn&gt;3,14&lt;/mn&gt;&lt;mn&gt;2,72&lt;/mn&gt;&lt;/mfenced&gt;</span>
 
-ascii2mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display: <span class="hljs-string">'block'</span>});
+mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display: <span class="hljs-string">'block'</span>});
 <span class="hljs-comment">// &lt;math display=&quot;block&quot;&gt;&lt;mfenced open=&quot;[&quot; close=&quot;]&quot;&gt;&lt;mtable&gt;&lt;mtr&gt;&lt;mtd&gt;&lt;mn&gt;40,2&lt;/mn&gt;&lt;/mtd&gt;&lt;/mtr&gt;&lt;mtr&gt;&lt;mtd&gt;&lt;mn&gt;3,14&lt;/mn&gt;&lt;/mtd&gt;&lt;/mtr&gt;&lt;mtr&gt;&lt;mtd&gt;&lt;mn&gt;2,72&lt;/mn&gt;&lt;/mtd&gt;&lt;/mtr&gt;&lt;/mtable&gt;&lt;/mfenced&gt;&lt;/math&gt;</span>
 </code></pre>
         </section>
@@ -144,30 +147,31 @@ ascii2mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display
           <p>This package exposes a single
             function <code>ascii2mathml</code> that intuitively takes
             simple mathematical expressions written in an
-            <a href="http://asciimath.org/"><em>AsciiMath</em></a> dialog,
+            <a href="https://asciimath.org/"><em>AsciiMath</em></a> dialog,
             and outputs verbose and ugly (but
-            structured) <a href="http://www.w3.org/Math/"><em>MathML</em></a>,
+            structured) <a href="https://www.w3.org/Math/"><em>MathML</em></a>,
             that is all it does.</p>
           <p>You can use it on the command line or on the server as a
-            <a href="http://nodejs.org/">node</a>/<a href="https://iojs.org/">io.js</a>
-            package, or in the browser by including the script source. In
-            the browser, you choose how to parse the math in your document
-            (by looking hard for any math-y substrings, parsing all
-            expressions wrapped in <code>$</code>…<code>$</code>, or using
-            some other excellent tools out there that does it for
-            you). And you can choose what to do with the output as well
-            (piping it to another program, calling your favorite DOM
-            parser to inject it, or just logging it to the console).</p>
+            <a href="https://nodejs.org/">node</a> package, or in the
+            browser by including the script source. In the browser,
+            you choose how to parse the math in your document (by
+            looking hard for any math-y substrings, parsing all
+            expressions wrapped in <code>$</code>…<code>$</code>, or
+            using some other excellent tools out there that does it
+            for you). And you can choose what to do with the output as
+            well (piping it to another program, calling your favorite
+            DOM parser to inject it, or just logging it to the
+            console).</p>
         </section>
 
         <section id="why-not-mathjax">
           <h2>Why not just use <em>MathJax</em>?</h2>
-          <p><a href="http://www.mathjax.org/"><em>MathJax</em></a> is an
+          <p><a href="https://www.mathjax.org/"><em>MathJax</em></a> is an
             excellent tool that you should probably be using if all you
             want to do is include complex mathematical expressions in a
             document. And you should probably use it
             <em>along side</em> this package as well if you want
-            <a href="http://www.chromestatus.com/features/5240822173794304">Chrome
+            <a href="https://www.chromestatus.com/features/5240822173794304">Chrome
               users</a> to be able to read your expressions. However,
             MathJax is a complex piece of software that does a great deal
             more than just translate simple expression into structured
@@ -175,7 +179,7 @@ ascii2mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display
             definitely overkill. Ascii2MathML promises to be a lot faster
             (by doing less) then MathJax, and if the readers of your
             document (or users of your app) are using a
-            <a href="http://caniuse.com/#feat=mathml">standard conforming
+            <a href="https://caniuse.com/#feat=mathml">standard conforming
               browser</a>, they will benefit a great bit. You will be able
             to translate your expression on the server before your readers
             even open the document, reducing any lag time to native.</p>
@@ -1113,6 +1117,7 @@ ascii2mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display
               <li><code>vec x = ahat i + bhat j + chat k</code></li>
               <li><code>X -&gt; x + tilde x</code></li>
               <li><code>hat(xyz)</code></li>
+              <li><code>cancel(a + b)</code></li>
             </ul>
           </aside>
         </section>
@@ -1197,6 +1202,7 @@ ascii2mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display
       </section>
     </article>
     <script src="dist/ascii2mathml.min.js"></script>
+    <script>window.ascii2mathml = ascii2mathml.default</script>
     <script src="main.js"></script>
   </body>
 </html>
