@@ -978,6 +978,14 @@ mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display: <spa
               </thead>
               <tbody>
                 <tr>
+                  <td style="text-align:center"><code>binom(a, b)</code></td>
+                  <td style="text-align:center"><math>
+                      <mfenced open="(" close=")">
+                        <mfrac linethickness="0"><mi>a</mi><mi>b</mi></mfrac>
+                      </mfenced>
+                  </math></td>
+                </tr>
+                <tr>
                   <td style="text-align:center"><code>abs x</code></td>
                   <td style="text-align:center"><math>
                       <mfenced open="|" close="|"><mi>x</mi></mfenced>
@@ -1006,7 +1014,7 @@ mathml(<span class="hljs-string">'[40,2 ;; 3,14 ;; 2,72]'</span>, {display: <spa
           </div>
           <aside class="examples">
             <ul>
-              <li><code>(n; k) = n! / (n-k)!k!</code></li>
+              <li><code>binom(n, k) = n! / (n-k)!k!</code></li>
               <li><code>(: V(t)^2 :) = lim_(T->oo) 1/T int_(-T./2)^(T./2) V(t)^2 dt</code></li>
             </ul>
           </aside>

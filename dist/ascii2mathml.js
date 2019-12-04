@@ -1,4 +1,4 @@
-/*! ascii2mathml v0.6.2 | (c) 2015 (MIT) | https://github.com/runarberg/ascii2mathml#readme */
+/*! ascii2mathml v0.7.0 | (c) 2015 (MIT) | https://github.com/runarberg/ascii2mathml#readme */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ascii2mathml = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
@@ -469,6 +469,10 @@ function _nonIterableRest() {
 }
 
 function _iterableToArrayLimit(arr, i) {
+  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+    return;
+  }
+
   var _arr = [];
   var _n = true;
   var _d = false;
@@ -652,6 +656,25 @@ function parser(options) {
           base = two[0] ? removeSurroundingBrackets(two[0]) : mrow("");
       el = mroot(base + index);
       rest = two[1];
+    } else if (ascii.startsWith("binom")) {
+      var _syntax$splitNextGrou = _syntax.default.splitNextGroup(ascii),
+          _syntax$splitNextGrou2 = _slicedToArray(_syntax$splitNextGrou, 5),
+          group = _syntax$splitNextGrou2[2],
+          after = _syntax$splitNextGrou2[4],
+          _colsplit = colsplit(group),
+          _colsplit2 = _slicedToArray(_colsplit, 2),
+          a = _colsplit2[0],
+          b = _colsplit2[1],
+          over = parsegroup(a.trim()),
+          under = parsegroup(b.trim());
+
+      el = mfenced(mfrac(over + under, {
+        linethickness: 0
+      }), {
+        open: "(",
+        close: ")"
+      });
+      rest = after;
     } else if (head === "\\" && ascii.length > 1) {
       // ## Forced opperator ##
       if (ascii[1].match(/[(\[]/)) {
@@ -723,26 +746,26 @@ function parser(options) {
       var _ref = _syntax.default.isgroupStart(ascii) ? _syntax.default.splitNextGroup(ascii) : _syntax.default.splitNextVert(ascii),
           _ref2 = _slicedToArray(_ref, 5),
           open = _ref2[1],
-          group = _ref2[2],
+          _group = _ref2[2],
           close = _ref2[3],
-          after = _ref2[4];
+          _after = _ref2[4];
 
-      rest = _lexicon.groupings.open.get(after);
+      rest = _lexicon.groupings.open.get(_after);
 
       var rows = function () {
-        var lines = newlinesplit(group);
-        return lines.length > 1 ? lines : rowsplit(group);
+        var lines = newlinesplit(_group);
+        return lines.length > 1 ? lines : rowsplit(_group);
       }();
 
-      if (_syntax.default.ismatrixInterior(group.trim(), options.colSep, options.rowSep)) {
+      if (_syntax.default.ismatrixInterior(_group.trim(), options.colSep, options.rowSep)) {
         // ### Matrix ##
-        if (group.trim().endsWith(options.colSep)) {
+        if (_group.trim().endsWith(options.colSep)) {
           // trailing row break
-          group = group.trimRight().slice(0, -1);
+          _group = _group.trimRight().slice(0, -1);
         }
 
         var cases = open === "{" && close === "",
-            table = parsetable(group, cases && {
+            table = parsetable(_group, cases && {
           columnalign: "center left"
         });
         el = mfenced(table, {
@@ -751,37 +774,23 @@ function parser(options) {
         });
       } else if (rows.length > 1) {
         // ### Column vector ###
-        if (rows.length === 2 && open === "(" && close === ")") {
-          // #### Binomial Coefficient ####
-          // Experimenting with the binomial coefficient
-          // Perhaps I'll remove this later
-          var binom = mfrac(rows.map(parsegroup).join(""), {
-            linethickness: 0
-          });
-          el = mfenced(binom, {
-            open: open,
-            close: close
-          });
-        } else {
-          // #### Single column vector ####
-          var vector = rows.map(colsplit);
+        var vector = rows.map(colsplit);
 
-          if (last(vector).length === 1 && last(vector)[0].match(/^\s*$/)) {
-            // A trailing rowbreak
-            vector = vector.slice(0, -1);
-          }
-
-          var matrix = vector.map(function (row) {
-            return mtr(row.map(compose(mtd, parsegroup)).join(""));
-          }).join("");
-          el = mfenced(mtable(matrix), {
-            open: open,
-            close: close
-          });
+        if (last(vector).length === 1 && last(vector)[0].match(/^\s*$/)) {
+          // A trailing rowbreak
+          vector = vector.slice(0, -1);
         }
+
+        var matrix = vector.map(function (row) {
+          return mtr(row.map(compose(mtd, parsegroup)).join(""));
+        }).join("");
+        el = mfenced(mtable(matrix), {
+          open: open,
+          close: close
+        });
       } else {
         // ### A fenced group ###
-        var cols = colsplit(group),
+        var cols = colsplit(_group),
             els = cols.map(parsegroup).join(""),
             attrs = {
           open: open,
