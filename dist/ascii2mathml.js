@@ -1,6 +1,8 @@
-/*! ascii2mathml v0.7.0 | (c) 2015 (MIT) | https://github.com/runarberg/ascii2mathml#readme */
+/*! ascii2mathml v0.7.1 | (c) 2015 (MIT) | https://runarberg.github.io/ascii2mathml/ */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ascii2mathml = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
+
+function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -8,7 +10,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.ascii2mathml = ascii2mathml;
 exports.default = void 0;
 
-var _parser = _interopRequireDefault(require("./lib/parser"));
+var _parser = _interopRequireDefault(require("./parser"));
 
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {
@@ -16,66 +18,134 @@ function _interopRequireDefault(obj) {
   };
 }
 
-function ascii2mathml(asciimath, options) {
-  // Curry
-  if (typeof asciimath === "object") {
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+    _typeof = function _typeof(obj) {
+      return _typeof2(obj);
+    };
+  } else {
+    _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function ascii2mathml(asciimath) {
+  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      _ref$annotate = _ref.annotate,
+      annotate = _ref$annotate === void 0 ? false : _ref$annotate,
+      _ref$bare = _ref.bare,
+      bare = _ref$bare === void 0 ? false : _ref$bare,
+      _ref$display = _ref.display,
+      display = _ref$display === void 0 ? "inline" : _ref$display,
+      _ref$standalone = _ref.standalone,
+      standalone = _ref$standalone === void 0 ? false : _ref$standalone,
+      _ref$dir = _ref.dir,
+      dir = _ref$dir === void 0 ? "ltr" : _ref$dir,
+      _ref$decimalMark = _ref.decimalMark,
+      decimalMark = _ref$decimalMark === void 0 ? "." : _ref$decimalMark,
+      _ref$colSep = _ref.colSep,
+      colSep = _ref$colSep === void 0 ? decimalMark === "," ? ";" : "," : _ref$colSep,
+      _ref$rowSep = _ref.rowSep,
+      rowSep = _ref$rowSep === void 0 ? colSep === ";" ? ";;" : ";" : _ref$rowSep; // Curry
+
+
+  if (_typeof(asciimath) === "object") {
     return function (str, options2) {
-      var opts = Object.assign({}, asciimath, options2);
+      var opts = _objectSpread({}, asciimath, {}, options2);
+
       return ascii2mathml(str, opts);
     };
   }
 
-  options = typeof options === "object" ? options : {};
-  options.annotate = options.annotate || false;
-  options.bare = options.bare || false;
-  options.display = options.display || "inline";
-  options.standalone = options.standalone || false;
-  options.dir = options.dir || "ltr";
-  options.decimalMark = options.decimalMark || ".";
-  options.colSep = options.colSep || ",";
-  options.rowSep = options.rowSep || ";";
-
-  if (options.decimalMark === "," && options.colSep === ",") {
-    options.colSep = ";";
-  }
-
-  if (options.colSep === ";" && options.rowSep === ";") {
-    options.rowSep = ";;";
-  }
-
-  if (options.bare) {
-    if (options.standalone) {
+  if (bare) {
+    if (standalone) {
       throw new Error("Can't output a valid HTML without a root <math> element");
     }
 
-    if (options.display && options.display.toLowerCase() !== "inline") {
+    if (display && display.toLowerCase() !== "inline") {
       throw new Error("Can't display block without root element.");
     }
 
-    if (options.dir && options.dir.toLowerCase() !== "ltr") {
+    if (dir && dir.toLowerCase() !== "ltr") {
       throw new Error("Can't have right-to-left direction without root element.");
     }
   }
 
-  var parse = (0, _parser.default)(options);
+  var parse = (0, _parser.default)({
+    decimalMark: decimalMark,
+    colSep: colSep,
+    rowSep: rowSep
+  });
   var out;
-  var math = options.bare ? function (expr) {
+  var math = bare ? function (expr) {
     return expr;
   } : function (expr) {
-    return "<math".concat(options.display !== "inline" ? " display=\"".concat(options.display, "\"") : "").concat(options.dir !== "ltr" ? " dir=\"".concat(options.dir, "\"") : "", ">").concat(expr, "</math>");
+    return "<math".concat(display !== "inline" ? " display=\"".concat(display, "\"") : "").concat(dir !== "ltr" ? " dir=\"".concat(dir, "\"") : "", ">").concat(expr, "</math>");
   };
 
-  if (options.annotate) {
+  if (annotate) {
     // Make sure the all presentational part is the first element
-    var parsed = parse(asciimath.trim(), ""),
-        mathml = parsed === _parser.default.getlastel(parsed) ? parsed : "<mrow>".concat(parsed, "</mrow>");
-    out = math("<semantics>" + mathml + '<annotation encoding="application/AsciiMath">' + asciimath + "</annotation>" + "</semantics>");
+    var parsed = parse(asciimath.trim(), "");
+    var mathml = parsed === _parser.default.getlastel(parsed) ? parsed : "<mrow>".concat(parsed, "</mrow>");
+    out = math("<semantics>".concat(mathml, "<annotation encoding=\"application/AsciiMath\">").concat(asciimath, "</annotation>") + "</semantics>");
   } else {
     out = math(parse(asciimath.trim(), ""));
   }
 
-  if (options.standalone) {
-    out = "<!DOCTYPE html><html><head><title>" + asciimath + "</title></head>" + "<body>" + out + "</body></html>";
+  if (standalone) {
+    out = "<!DOCTYPE html><html><head><title>".concat(asciimath, "</title></head>") + "<body>".concat(out, "</body></html>");
   }
 
   return out;
@@ -84,7 +154,7 @@ function ascii2mathml(asciimath, options) {
 var _default = ascii2mathml;
 exports.default = _default;
 
-},{"./lib/parser":3}],2:[function(require,module,exports){
+},{"./parser":3}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -95,8 +165,8 @@ exports.accents = exports.fonts = exports.groupings = exports.operators = export
 
 var numbers = {};
 exports.numbers = numbers;
-var digitRange = "[\u0030-\u0039\u00B2\u00B3\u00B9\u00BC-\u00BE" + "\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9" + "\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9" + "\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2" + "\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59" + "\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C" + "\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819" + "\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99" + "\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59" + "\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u218B" + "\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD" + "\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195" + "\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF" + "零一二三四五六七八九十百千万億兆京垓𥝱秭穣溝澗正載割分厘毛糸忽微繊沙塵埃" + "\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835" + "\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9" + "\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]";
-var digitRE = new RegExp(digitRange);
+var digitRange = "[0-9\xB2\xB3\xB9\xBC-\xBE" + "\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9" + "\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9" + "\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2" + "\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59" + "\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C" + "\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819" + "\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99" + "\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59" + "\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u218B" + "\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD" + "\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195" + "\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF" + "零一二三四五六七八九十百千万億兆京垓𥝱秭穣溝澗正載割分厘毛糸忽微繊沙塵埃" + "\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835" + "\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9" + "\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]";
+var digitRE = new RegExp(digitRange, "u");
 Object.defineProperties(numbers, {
   digitRange: {
     value: digitRange
@@ -150,7 +220,7 @@ var identifiers = {
   psi: "ψ",
   omega: "ω",
   // Special symbols
-  "oo": "∞",
+  oo: "∞",
   "O/": "∅",
   // Blackboard
   CC: "ℂ",
@@ -190,37 +260,37 @@ var operators = {
   "''": "″",
   "'''": "‴",
   "''''": "⁗",
-  "xx": "×",
+  xx: "×",
   "-:": "÷",
   "|><": "⋉",
   "><|": "⋊",
   "|><|": "⋈",
   "@": "∘",
   "o+": "⊕",
-  "ox": "⊗",
+  ox: "⊗",
   "o.": "⊙",
   "!": "!",
-  "sum": "∑",
-  "prod": "∏",
+  sum: "∑",
+  prod: "∏",
   "^^": "∧",
   "^^^": "⋀",
-  "vv": "∨",
-  "vvv": "⋁",
-  "nn": "∩",
-  "nnn": "⋂",
-  "uu": "∪",
-  "uuu": "⋃",
+  vv: "∨",
+  vvv: "⋁",
+  nn: "∩",
+  nnn: "⋂",
+  uu: "∪",
+  uuu: "⋃",
   // Miscellaneous
-  "int": "∫",
-  "oint": "∮",
-  "dint": "∬",
+  int: "∫",
+  oint: "∮",
+  dint: "∬",
   "+-": "±",
-  "del": "∂",
-  "grad": "∇",
-  "aleph": "ℵ",
+  del: "∂",
+  grad: "∇",
+  aleph: "ℵ",
   "/_": "∠",
-  "diamond": "⋄",
-  "square": "□",
+  diamond: "⋄",
+  square: "□",
   "|__": "⌊",
   "__|": "⌋",
   "|~": "⌈",
@@ -236,17 +306,17 @@ var operators = {
   "-<=": "⪯",
   ">-": "≻",
   ">-=": "⪰",
-  "in": "∈",
+  in: "∈",
   "!in": "∉",
-  "sub": "⊂",
-  "sup": "⊃",
-  "sube": "⊆",
-  "supe": "⊇",
+  sub: "⊂",
+  sup: "⊃",
+  sube: "⊆",
+  supe: "⊇",
   "-=": "≡",
   "==": "≡",
   "~=": "≅",
   "~~": "≈",
-  "prop": "∝",
+  prop: "∝",
   // Arrows
   "<-": "←",
   "->": "→",
@@ -256,32 +326,32 @@ var operators = {
   ">->": "↣",
   "->>": "↠",
   ">->>": "⤖",
-  "uarr": "↑",
-  "darr": "↓",
-  "larr": "←",
-  "rarr": "→",
-  "harr": "↔",
-  "lArr": "⇐",
-  "rArr": "⇒",
-  "hArr": "⇔",
-  "iff": "⇔",
+  uarr: "↑",
+  darr: "↓",
+  larr: "←",
+  rarr: "→",
+  harr: "↔",
+  lArr: "⇐",
+  rArr: "⇒",
+  hArr: "⇔",
+  iff: "⇔",
   // Punctuations
   ",": ",",
   ":.": "∴",
   "...": "…",
-  "cdots": "⋯",
-  "ddots": "⋱",
-  "vdots": "⋮",
+  cdots: "⋯",
+  ddots: "⋱",
+  vdots: "⋮",
   // Logical
-  "if": "if",
-  "otherwise": "otherwise",
-  "and": "and",
-  "or": "or",
-  "not": "¬",
-  "AA": "∀",
-  "EE": "∃",
+  if: "if",
+  otherwise: "otherwise",
+  and: "and",
+  or: "or",
+  not: "¬",
+  AA: "∀",
+  EE: "∃",
   "_|_": "⊥",
-  "TT": "⊤",
+  TT: "⊤",
   "|--": "⊢",
   "|==": "⊨"
 };
@@ -296,17 +366,17 @@ Object.defineProperty(operators, "get", {
     return operators[char] || char;
   }
 });
-Object.defineProperty(operators, "regexp", {
-  value: new RegExp("(" + Object.keys(operators).sort(function (a, b) {
-    return b.length - a.length;
-  }).map(regexpEscape).join("|") + "|[+\-<=>|~¬±×÷ϐϑϒϕϰϱϴϵ϶؆؇؈‖′″‴⁀⁄⁒\u2061-\u2064" + "\u207A-\u207E\u208A-\u208E★☆♠♡♢♣♭♮♯﬩\uFF61-\uFF68" + "＋＜＝＞＼＾｜～￢￩￪￫￬" + "\u2200-\u22FF\u2A00-\u2AFF\u27C0-\u27E5\u2980-\u2982" + "\u2999-\u29FF\u2301-\u23FF\u25A0-\u25FF\u2B00-\u2BFF" + "\u2190-\u21FF\u27F0-\u27FF\u2900-\u297F\u20D0-\u20EF]" + ")")
-});
 
 function regexpEscape(str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-} // Groupings
-// =========
+  return str.replace(/[-[\]/{}()*+?.\\^$|]/g, "\\$&");
+}
 
+Object.defineProperty(operators, "regexp", {
+  value: new RegExp("(".concat(Object.keys(operators).sort(function (a, b) {
+    return b.length - a.length;
+  }).map(regexpEscape).join("|"), "|[+-<=>|~\xAC\xB1\xD7\xF7\u03D0\u03D1\u03D2\u03D5\u03F0\u03F1\u03F4\u03F5\u03F6\u0606\u0607\u0608\u2016\u2032\u2033\u2034\u2040\u2044\u2052\u2061-\u2064") + "\u207A-\u207E\u208A-\u208E\u2605\u2606\u2660\u2661\u2662\u2663\u266D\u266E\u266F\uFB29\uFF61-\uFF68" + "\uFF0B\uFF1C\uFF1D\uFF1E\uFF3C\uFF3E\uFF5C\uFF5E\uFFE2\uFFE9\uFFEA\uFFEB\uFFEC" + "\u2200-\u22FF\u2A00-\u2AFF\u27C0-\u27E5\u2980-\u2982" + "\u2999-\u29FF\u2301-\u23FF\u25A0-\u25FF\u2B00-\u2BFF" + "\u2190-\u21FF\u27F0-\u27FF\u2900-\u297F\u20D0-\u20EF]" + ")")
+}); // Groupings
+// =========
 
 var groupings = {
   open: {
@@ -387,7 +457,7 @@ Object.defineProperty(fonts, "get", {
   }
 });
 Object.defineProperty(fonts, "regexp", {
-  value: new RegExp("(" + Object.keys(fonts).join("|") + ")")
+  value: new RegExp("(".concat(Object.keys(fonts).join("|"), ")"))
 }); // Accents
 // =======
 
@@ -439,11 +509,13 @@ Object.defineProperty(accents, "get", {
   }
 });
 Object.defineProperty(accents, "regexp", {
-  value: new RegExp("(" + Object.keys(accents).join("|") + ")")
+  value: new RegExp("(".concat(Object.keys(accents).join("|"), ")"))
 });
 
 },{}],3:[function(require,module,exports){
 "use strict";
+
+function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -502,61 +574,75 @@ function _arrayWithHoles(arr) {
   if (Array.isArray(arr)) return arr;
 }
 
+function _typeof(obj) {
+  if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+    _typeof = function _typeof(obj) {
+      return _typeof2(obj);
+    };
+  } else {
+    _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+    };
+  }
+
+  return _typeof(obj);
+}
+
 function tag(tagname) {
   return function fn(content, attr) {
-    if (typeof content === "object") {
+    if (_typeof(content) === "object") {
       // Curry
       return function (str) {
         return fn(str, content);
       };
     }
 
-    if (typeof attr !== "object") {
+    if (_typeof(attr) !== "object") {
       return "<".concat(tagname, ">").concat(content, "</").concat(tagname, ">");
-    } else {
-      var attrstr = Object.keys(attr).map(function (key) {
-        return "".concat(key, "=\"").concat(attr[key], "\"");
-      }).join(" ");
-      return "<".concat(tagname, " ").concat(attrstr, ">").concat(content, "</").concat(tagname, ">");
     }
+
+    var attrstr = Object.keys(attr).map(function (key) {
+      return "".concat(key, "=\"").concat(attr[key], "\"");
+    }).join(" ");
+    return "<".concat(tagname, " ").concat(attrstr, ">").concat(content, "</").concat(tagname, ">");
   };
 }
 
-var mi = tag("mi"),
-    mn = tag("mn"),
-    mo = tag("mo"),
-    mfrac = tag("mfrac"),
-    msup = tag("msup"),
-    msub = tag("msub"),
-    msubsup = tag("msubsup"),
-    munder = tag("munder"),
-    mover = tag("mover"),
-    munderover = tag("munderover"),
-    menclose = tag("menclose"),
-    mrow = tag("mrow"),
-    msqrt = tag("msqrt"),
-    mroot = tag("mroot"),
-    mfenced = tag("mfenced"),
-    mtable = tag("mtable"),
-    mtr = tag("mtr"),
-    mtd = tag("mtd");
+var mi = tag("mi");
+var mn = tag("mn");
+var mo = tag("mo");
+var mfrac = tag("mfrac");
+var msup = tag("msup");
+var msub = tag("msub");
+var msubsup = tag("msubsup");
+var munder = tag("munder");
+var mover = tag("mover");
+var munderover = tag("munderover");
+var menclose = tag("menclose");
+var mrow = tag("mrow");
+var msqrt = tag("msqrt");
+var mroot = tag("mroot");
+var mfenced = tag("mfenced");
+var mtable = tag("mtable");
+var mtr = tag("mtr");
+var mtd = tag("mtd");
 
 function parser(options) {
-  var decimalMarkRE = options.decimalMark === "." ? "\\." : options.decimalMark,
-      numberRegexp = new RegExp("^".concat(_lexicon.numbers.digitRange, "+(").concat(decimalMarkRE).concat(_lexicon.numbers.digitRange, "+)?")),
-      colsplit = splitby(options.colSep),
-      rowsplit = splitby(options.rowSep),
-      newlinesplit = splitby("\n");
+  var decimalMarkRE = options.decimalMark === "." ? "\\." : options.decimalMark;
+  var numberRegexp = new RegExp("^".concat(_lexicon.numbers.digitRange, "+(").concat(decimalMarkRE).concat(_lexicon.numbers.digitRange, "+)?"));
+  var colsplit = splitby(options.colSep);
+  var rowsplit = splitby(options.rowSep);
+  var newlinesplit = splitby("\n");
 
   function splitby(sep) {
     return function (str) {
-      var split = [],
-          inners = 0,
-          index = 0;
+      var split = [];
+      var inners = 0;
+      var index = 0;
 
       for (var i = 0; i < str.length; i += 1) {
-        var rest = str.slice(i),
-            char = str[i];
+        var rest = str.slice(i);
+        var char = str[i];
 
         if (rest.startsWith(sep) && !str.slice(0, i).match(/\\(\\{2})*$/)) {
           if (inners === 0) {
@@ -583,13 +669,13 @@ function parser(options) {
     if (ascii.match(/^\s/)) {
       // Dont include the space it if there is a binary infix becoming
       // a prefix
-      if (ascii.match(/^\s+(\/[^\/]|^[^\^]|_[^_|])/)) {
+      if (ascii.match(/^\s+(\/[^/]|^[^^]|_[^_|])/)) {
         return parse(ascii.trim(), mathml, true);
       } // Count the number of leading spaces
 
 
-      var spaces = ascii.match(/^ +/),
-          spacecount = spaces ? spaces[0].length : 0;
+      var spaces = ascii.match(/^ +/);
+      var spacecount = spaces ? spaces[0].length : 0;
 
       if (spacecount > 1) {
         // spacewidth is a linear function of spacecount
@@ -639,35 +725,43 @@ function parser(options) {
       return ["", ""];
     }
 
-    var el, rest;
-    var head = ascii[0],
-        tail = ascii.slice(1),
-        nextsymbol = head + (tail.match(/^[A-Za-z]+/) || "");
+    var el;
+    var rest;
+    var head = ascii[0];
+    var tail = ascii.slice(1);
+    var nextsymbol = head + (tail.match(/^[A-Za-z]+/) || "");
 
     if (ascii.startsWith("sqrt")) {
       // ## Roots ##
       var split = parseone(ascii.slice(4).trim(), grouped);
       el = msqrt(split[0] ? removeSurroundingBrackets(split[0]) : mrow(""));
-      rest = split[1];
+
+      var _split = _slicedToArray(split, 2);
+
+      rest = _split[1];
     } else if (ascii.startsWith("root")) {
-      var one = parseone(ascii.slice(4).trimLeft(), grouped),
-          index = one[0] ? removeSurroundingBrackets(one[0]) : mrow(""),
-          two = parseone(one[1].trimLeft(), grouped),
-          base = two[0] ? removeSurroundingBrackets(two[0]) : mrow("");
+      var one = parseone(ascii.slice(4).trimLeft(), grouped);
+      var index = one[0] ? removeSurroundingBrackets(one[0]) : mrow("");
+      var two = parseone(one[1].trimLeft(), grouped);
+      var base = two[0] ? removeSurroundingBrackets(two[0]) : mrow("");
       el = mroot(base + index);
-      rest = two[1];
+
+      var _two = _slicedToArray(two, 2);
+
+      rest = _two[1];
     } else if (ascii.startsWith("binom")) {
       var _syntax$splitNextGrou = _syntax.default.splitNextGroup(ascii),
           _syntax$splitNextGrou2 = _slicedToArray(_syntax$splitNextGrou, 5),
           group = _syntax$splitNextGrou2[2],
-          after = _syntax$splitNextGrou2[4],
-          _colsplit = colsplit(group),
+          after = _syntax$splitNextGrou2[4];
+
+      var _colsplit = colsplit(group),
           _colsplit2 = _slicedToArray(_colsplit, 2),
           a = _colsplit2[0],
-          b = _colsplit2[1],
-          over = parsegroup(a.trim()),
-          under = parsegroup(b.trim());
+          b = _colsplit2[1];
 
+      var over = parsegroup(a.trim()) || mrow("");
+      var under = parsegroup(b.trim()) || mrow("");
       el = mfenced(mfrac(over + under, {
         linethickness: 0
       }), {
@@ -677,7 +771,7 @@ function parser(options) {
       rest = after;
     } else if (head === "\\" && ascii.length > 1) {
       // ## Forced opperator ##
-      if (ascii[1].match(/[(\[]/)) {
+      if (ascii[1].match(/[([]/)) {
         var stop = findmatching(tail);
         el = mo(ascii.slice(2, stop));
         rest = ascii.slice(stop + 1);
@@ -687,10 +781,12 @@ function parser(options) {
       }
     } else if (_lexicon.accents.contains(nextsymbol)) {
       // ## Accents ##
-      var accent = _lexicon.accents.get(nextsymbol),
-          next = ascii.slice(nextsymbol.length).trimLeft(),
-          ijmatch = next.match(/^\s*\(?([ij])\)?/),
-          _split = parseone(next);
+      var accent = _lexicon.accents.get(nextsymbol);
+
+      var next = ascii.slice(nextsymbol.length).trimLeft();
+      var ijmatch = next.match(/^\s*\(?([ij])\)?/);
+
+      var _split2 = parseone(next);
 
       switch (accent.type) {
         // ## Accents on top ##
@@ -702,47 +798,62 @@ function parser(options) {
             }));
             rest = next.slice(ijmatch[0].length);
           } else {
-            el = mover(removeSurroundingBrackets(_split[0]) + mo(accent.accent, {
+            el = mover(removeSurroundingBrackets(_split2[0]) + mo(accent.accent, {
               accent: true
             }));
-            rest = _split[1];
+
+            var _split3 = _slicedToArray(_split2, 2);
+
+            rest = _split3[1];
           }
 
           break;
         // ## Accents below ##
 
         case "under":
-          el = munder(removeSurroundingBrackets(_split[0]) + mo(accent.accent));
-          rest = _split[1];
+          el = munder(removeSurroundingBrackets(_split2[0]) + mo(accent.accent));
+
+          var _split4 = _slicedToArray(_split2, 2);
+
+          rest = _split4[1];
           break;
         // ## Enclosings
 
         case "enclose":
-          el = menclose(removeSurroundingBrackets(_split[0]), accent.attrs);
-          rest = _split[1];
+          el = menclose(removeSurroundingBrackets(_split2[0]), accent.attrs);
+
+          var _split5 = _slicedToArray(_split2, 2);
+
+          rest = _split5[1];
           break;
 
         default:
-          throw new Error("Invalid config for accent " + nextsymbol);
+          throw new Error("Invalid config for accent ".concat(nextsymbol));
       }
     } else if (_syntax.default.isfontCommand(ascii)) {
       // ## Font Commands ##
-      var _split2 = _syntax.default.splitfont(ascii);
+      var _split6 = _syntax.default.splitfont(ascii);
 
-      el = tag(_split2.tagname)(_split2.text, _split2.font && {
-        mathvariant: _split2.font
+      el = tag(_split6.tagname)(_split6.text, _split6.font && {
+        mathvariant: _split6.font
       });
-      rest = _split2.rest;
+      rest = _split6.rest;
     } else if (_lexicon.groupings.complex.contains(nextsymbol)) {
       // ## Complex groupings ##
-      var grouping = _lexicon.groupings.complex.get(nextsymbol),
-          _next = ascii.slice(nextsymbol.length).trimLeft(),
-          _split3 = parseone(_next);
+      var grouping = _lexicon.groupings.complex.get(nextsymbol);
 
-      el = mfenced(removeSurroundingBrackets(_split3[0]), grouping);
-      rest = _split3[1];
+      var _next = ascii.slice(nextsymbol.length).trimLeft();
+
+      var _split7 = parseone(_next);
+
+      el = mfenced(removeSurroundingBrackets(_split7[0]), grouping);
+
+      var _split8 = _slicedToArray(_split7, 2);
+
+      rest = _split8[1];
     } else if (_syntax.default.isgroupStart(ascii) || _syntax.default.isvertGroupStart(ascii)) {
       // ## Groupings ##
+      // eslint-disable-next-line prefer-const
       var _ref = _syntax.default.isgroupStart(ascii) ? _syntax.default.splitNextGroup(ascii) : _syntax.default.splitNextVert(ascii),
           _ref2 = _slicedToArray(_ref, 5),
           open = _ref2[1],
@@ -764,8 +875,8 @@ function parser(options) {
           _group = _group.trimRight().slice(0, -1);
         }
 
-        var cases = open === "{" && close === "",
-            table = parsetable(_group, cases && {
+        var cases = open === "{" && close === "";
+        var table = parsetable(_group, cases && {
           columnalign: "center left"
         });
         el = mfenced(table, {
@@ -782,7 +893,9 @@ function parser(options) {
         }
 
         var matrix = vector.map(function (row) {
-          return mtr(row.map(compose(mtd, parsegroup)).join(""));
+          return mtr(row.map(function (x) {
+            return mtd(parsegroup(x));
+          }).join(""));
         }).join("");
         el = mfenced(mtable(matrix), {
           open: open,
@@ -790,9 +903,9 @@ function parser(options) {
         });
       } else {
         // ### A fenced group ###
-        var cols = colsplit(_group),
-            els = cols.map(parsegroup).join(""),
-            attrs = {
+        var cols = colsplit(_group);
+        var els = cols.map(parsegroup).join("");
+        var attrs = {
           open: open,
           close: close
         };
@@ -806,10 +919,13 @@ function parser(options) {
     } else if (!grouped && _syntax.default.isgroupable(ascii, options)) {
       // ## Whitespace ##
       // treat whitespace separated subexpressions as a group
-      var _split4 = splitNextWhitespace(ascii);
+      var _split9 = splitNextWhitespace(ascii);
 
-      el = parsegroup(_split4[0]);
-      rest = _split4[1];
+      el = parsegroup(_split9[0]);
+
+      var _split10 = _slicedToArray(_split9, 2);
+
+      rest = _split10[1];
     } else if (_lexicon.numbers.isdigit(head)) {
       // ## Number ##
       var number = ascii.match(numberRegexp)[0];
@@ -820,17 +936,18 @@ function parser(options) {
       var _number = ascii.match(/^#`([^`]+)`/)[1];
       el = mn(_number);
       rest = ascii.slice(_number.length + 3);
-    } else if (ascii.match(new RegExp("^" + _lexicon.operators.regexp.source)) && !_lexicon.identifiers.contains(nextsymbol)) {
+    } else if (ascii.match(new RegExp("^".concat(_lexicon.operators.regexp.source))) && !_lexicon.identifiers.contains(nextsymbol)) {
       // ## Operators ##
       var _syntax$splitNextOper = _syntax.default.splitNextOperator(ascii),
           _syntax$splitNextOper2 = _slicedToArray(_syntax$splitNextOper, 2),
           op = _syntax$splitNextOper2[0],
-          _next2 = _syntax$splitNextOper2[1],
-          derivative = ascii.startsWith("'"),
-          prefix = contains(["∂", "∇"], op),
-          stretchy = contains(["|"], op),
-          mid = ascii.startsWith("| "),
-          attr = {};
+          _next2 = _syntax$splitNextOper2[1];
+
+      var derivative = ascii.startsWith("'");
+      var prefix = contains(["∂", "∇"], op);
+      var stretchy = contains(["|"], op);
+      var mid = ascii.startsWith("| ");
+      var attr = {};
 
       if (derivative) {
         attr.lspace = 0;
@@ -913,17 +1030,20 @@ function parser(options) {
   }
 
   function splitNextSubscript(el, rest) {
-    var next = parseone(rest.trim().slice(1).trim(), true, "msub"),
-        sub = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
-    var ml,
-        ascii = next[1]; // ### Supersubscript ###
+    var next = parseone(rest.trim().slice(1).trim(), true, "msub");
+    var sub = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
+    var ml;
+    var ascii = next[1]; // ### Supersubscript ###
 
     if (ascii && ascii.trim().startsWith("^") && (ascii.trim().length <= 1 || !ascii.trim()[1] !== "^")) {
-      var next2 = parseone(ascii.trim().slice(1).trim(), true),
-          sup = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow(""),
-          tagfun = _syntax.default.shouldGoUnder(el) ? munderover : msubsup;
+      var next2 = parseone(ascii.trim().slice(1).trim(), true);
+      var sup = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
+      var tagfun = _syntax.default.shouldGoUnder(el) ? munderover : msubsup;
       ml = tagfun(el + sub + sup);
-      ascii = next2[1];
+
+      var _next3 = _slicedToArray(next2, 2);
+
+      ascii = _next3[1];
     } else {
       var _tagfun = _syntax.default.shouldGoUnder(el) ? munder : msub;
 
@@ -934,17 +1054,20 @@ function parser(options) {
   }
 
   function splitNextSuperscript(el, rest) {
-    var next = parseone(rest.trim().slice(1).trim(), true, "msup"),
-        sup = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
-    var ml,
-        ascii = next[1]; // ### Super- subscript ###
+    var next = parseone(rest.trim().slice(1).trim(), true, "msup");
+    var sup = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
+    var ml;
+    var ascii = next[1]; // ### Super- subscript ###
 
     if (ascii.trim().startsWith("_") && (ascii.trim().length <= 1 || !ascii.trim()[1].match(/[|_]/))) {
-      var next2 = parseone(ascii.trim().slice(1).trim(), true),
-          sub = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow(""),
-          tagfun = _syntax.default.shouldGoUnder(el) ? munderover : msubsup;
+      var next2 = parseone(ascii.trim().slice(1).trim(), true);
+      var sub = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
+      var tagfun = _syntax.default.shouldGoUnder(el) ? munderover : msubsup;
       ml = tagfun(el + sub + sup);
-      ascii = next2[1];
+
+      var _next4 = _slicedToArray(next2, 2);
+
+      ascii = _next4[1];
     } else {
       var _tagfun2 = _syntax.default.shouldGoUnder(el) ? mover : msup;
 
@@ -955,18 +1078,21 @@ function parser(options) {
   }
 
   function splitNextUnderscript(el, rest) {
-    var next = parseone(rest.trim().slice(2).trim(), true, "munder"),
-        under = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
-    var ml,
-        ascii = next[1]; // ### Under- overscript ###
+    var next = parseone(rest.trim().slice(2).trim(), true, "munder");
+    var under = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
+    var ml;
+    var ascii = next[1]; // ### Under- overscript ###
 
-    var overmatch = ascii.match(/^(\.?\^)[^\^]/);
+    var overmatch = ascii.match(/^(\.?\^)[^^]/);
 
     if (overmatch) {
-      var next2 = parseone(ascii.trim().slice(overmatch[1].length).trim(), true),
-          over = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
+      var next2 = parseone(ascii.trim().slice(overmatch[1].length).trim(), true);
+      var over = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
       ml = munderover(el + under + over);
-      ascii = next2[1];
+
+      var _next5 = _slicedToArray(next2, 2);
+
+      ascii = _next5[1];
     } else {
       ml = munder(el + under);
     }
@@ -975,18 +1101,21 @@ function parser(options) {
   }
 
   function splitNextOverscript(el, rest) {
-    var next = parseone(rest.trim().slice(2).trim(), true, "mover"),
-        over = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
-    var ml,
-        ascii = next[1]; // ### Under- overscript ###
+    var next = parseone(rest.trim().slice(2).trim(), true, "mover");
+    var over = next[0] ? removeSurroundingBrackets(next[0]) : mrow("");
+    var ml;
+    var ascii = next[1]; // ### Under- overscript ###
 
     var undermatch = ascii.match(/^(\.?_)[^_|]/);
 
     if (undermatch) {
-      var next2 = parseone(ascii.trim().slice(undermatch[1].length).trim(), true),
-          under = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
+      var next2 = parseone(ascii.trim().slice(undermatch[1].length).trim(), true);
+      var under = next2[0] ? removeSurroundingBrackets(next2[0]) : mrow("");
       ml = munderover(el + under + over);
-      ascii = next2[1];
+
+      var _next6 = _slicedToArray(next2, 2);
+
+      ascii = _next6[1];
     } else {
       ml = mover(el + over);
     }
@@ -995,9 +1124,10 @@ function parser(options) {
   }
 
   function splitNextFraction(el, rest) {
-    var bevelled = rest.trim().startsWith("./"),
-        rem = rest.trim().slice(bevelled ? 2 : 1);
-    var next, ml, ascii;
+    var bevelled = rest.trim().startsWith("./");
+    var rem = rest.trim().slice(bevelled ? 2 : 1);
+    var next;
+    var ascii;
 
     if (rem.startsWith(" ")) {
       var split = rem.trim().split(" ");
@@ -1013,7 +1143,7 @@ function parser(options) {
     }
 
     next = next || mrow("");
-    ml = mfrac(removeSurroundingBrackets(el) + removeSurroundingBrackets(next), bevelled && {
+    var ml = mfrac(removeSurroundingBrackets(el) + removeSurroundingBrackets(next), bevelled && {
       bevelled: true
     });
 
@@ -1026,21 +1156,24 @@ function parser(options) {
 
   function splitNextWhitespace(str) {
     var re = new RegExp("(\\s|".concat(options.colSep, "|").concat(options.rowSep, "|$)"));
-    var match = str.match(re),
-        head = str.slice(0, match.index),
-        sep = match[0],
-        tail = str.slice(match.index + 1);
-    var next = head,
-        rest = sep + tail;
+    var match = str.match(re);
+    var head = str.slice(0, match.index);
+    var sep = match[0];
+    var tail = str.slice(match.index + 1);
+    var next = head;
+    var rest = sep + tail;
 
     if (!_syntax.default.isgroupStart(tail.trim()) && _syntax.default.endsInFunc(head)) {
       var newsplit = splitNextWhitespace(tail);
       next += sep + newsplit[0];
-      rest = newsplit[1];
+
+      var _newsplit = _slicedToArray(newsplit, 2);
+
+      rest = _newsplit[1];
     } else if (head.match(/root$/)) {
-      var split1 = splitNextWhitespace(tail),
-          split2 = splitNextWhitespace(split1[1].trimLeft());
-      next += sep + split1[0] + " " + split2[0];
+      var split1 = splitNextWhitespace(tail);
+      var split2 = splitNextWhitespace(split1[1].trimLeft());
+      next += "".concat(sep + split1[0], " ").concat(split2[0]);
       rest = sep + split2[1];
     }
 
@@ -1055,11 +1188,13 @@ function parser(options) {
       return el.trim().slice(1, -1);
     });
 
-    return mtable(rows.map(parserow).join(""), attrs);
+    return mtable(rows.map(function (row) {
+      return parserow(row);
+    }).join(""), attrs);
   }
 
-  function parserow(row, acc) {
-    acc = typeof acc === "string" ? acc : "";
+  function parserow(row) {
+    var acc = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
 
     if (!row || row.length === 0) {
       return mtr(acc);
@@ -1097,8 +1232,8 @@ function splitlast(mathml) {
   /**
    Return a pair of all but last eliment and the last eliment
    */
-  var lastel = getlastel(mathml),
-      prewels = mathml.slice(0, mathml.lastIndexOf(lastel));
+  var lastel = getlastel(mathml);
+  var prewels = mathml.slice(0, mathml.lastIndexOf(lastel));
   return [prewels, lastel];
 }
 
@@ -1107,9 +1242,9 @@ function removeSurroundingBrackets(mathml) {
 
   if (splitlast(inside)[1] === inside) {
     return inside;
-  } else {
-    return mrow(inside);
   }
+
+  return mrow(inside);
 }
 
 function getlastel(xmlstr) {
@@ -1123,14 +1258,14 @@ function getlastel(xmlstr) {
     if (spacematch) {
       var _i2 = spacematch.match[0].length;
       return xmlstr.slice(_i2);
-    } else {
-      return "";
     }
+
+    return "";
   }
 
   var tagname = tagmatch[1];
-  var i = xmlstr.length - (tagname.length + 3),
-      inners = 0;
+  var i = xmlstr.length - (tagname.length + 3);
+  var inners = 0;
 
   for (i; i >= 0; i -= 1) {
     if (xmlstr.slice(i).startsWith("<".concat(tagname))) {
@@ -1150,10 +1285,17 @@ function getlastel(xmlstr) {
 }
 
 function findmatching(str) {
-  var open = str[0],
-      close = open === "(" ? ")" : open === "[" ? "]" : str[0];
-  var inners = 0,
-      index = 0;
+  var open = str[0];
+  var close = open;
+
+  if (open === "(") {
+    close = ")";
+  } else if (open === "[") {
+    close = "]";
+  }
+
+  var inners = 0;
+  var index = 0;
 
   for (var i = 0; i < str.length; i += 1) {
     var char = str[i];
@@ -1185,12 +1327,6 @@ function last(arr) {
   return arr.slice(-1)[0];
 }
 
-function compose(f, g) {
-  return function (x) {
-    return f(g(x));
-  };
-}
-
 parser.getlastel = getlastel;
 var _default = parser;
 exports.default = _default;
@@ -1205,15 +1341,57 @@ exports.default = void 0;
 
 var _lexicon = require("./lexicon");
 
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+function _iterableToArrayLimit(arr, i) {
+  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+    return;
+  }
+
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
 function splitNextOperator(str) {
-  var re = new RegExp("^" + _lexicon.operators.regexp.source),
-      match = re.exec(str),
-      op = match[0];
+  var re = new RegExp("^".concat(_lexicon.operators.regexp.source));
+  var match = re.exec(str);
+  var op = match[0];
   return [_lexicon.operators.get(op), str.slice(op.length)];
 }
 
 function isgroupStart(str) {
-  var re = new RegExp("^" + _lexicon.groupings.open.regexp.source);
+  var re = new RegExp("^".concat(_lexicon.groupings.open.regexp.source));
   return str.match(re);
 }
 
@@ -1236,7 +1414,11 @@ function ismatrixInterior(str, colSep, rowSep) {
 
 
   while (rest && rest.trim()) {
-    rest = (splitNextGroup(rest) || [])[4];
+    var _ref = splitNextGroup(rest) || [];
+
+    var _ref2 = _slicedToArray(_ref, 5);
+
+    rest = _ref2[4];
 
     if (rest && (rest.startsWith(rowSep) || rest.match(/^\s*\n/))) {
       // `rowSep` delimited matrices are handled elsewhere.
@@ -1247,9 +1429,9 @@ function ismatrixInterior(str, colSep, rowSep) {
   return true;
 }
 
-var funcEndingRe = new RegExp("(" + _lexicon.identifiers.funs.concat(Object.keys(_lexicon.accents)).concat(["sqrt"]).sort(function (a, b) {
+var funcEndingRe = new RegExp("(".concat(_lexicon.identifiers.funs.concat(Object.keys(_lexicon.accents)).concat(["sqrt"]).sort(function (a, b) {
   return a.length - b.length;
-}).join("|") + ")$");
+}).join("|"), ")$"));
 
 function endsInFunc(str) {
   return str.match(funcEndingRe);
@@ -1257,24 +1439,27 @@ function endsInFunc(str) {
 
 function splitNextGroup(str) {
   /** Split the string into `[before, open, group, close, after]` */
-  var openRE = new RegExp("^" + _lexicon.groupings.open.regexp.source),
-      closeRE = new RegExp("^" + _lexicon.groupings.close.regexp.source);
-  var start,
-      stop,
-      open,
-      close,
-      inners = 0,
-      i = 0;
+  var openRE = new RegExp("^".concat(_lexicon.groupings.open.regexp.source));
+  var closeRE = new RegExp("^".concat(_lexicon.groupings.close.regexp.source));
+  var start;
+  var stop;
+  var open;
+  var close;
+  var inners = 0;
+  var i = 0;
 
   while (i < str.length) {
-    var rest = str.slice(i),
-        openMatch = rest.match(openRE),
-        closeMatch = rest.match(closeRE);
+    var rest = str.slice(i);
+    var openMatch = rest.match(openRE);
+    var closeMatch = rest.match(closeRE);
 
     if (openMatch) {
       if (typeof start !== "number") {
         start = i;
-        open = openMatch[0];
+
+        var _openMatch = _slicedToArray(openMatch, 1);
+
+        open = _openMatch[0];
       }
 
       inners += 1;
@@ -1283,7 +1468,9 @@ function splitNextGroup(str) {
       inners -= 1;
 
       if (inners === 0) {
-        close = closeMatch[0];
+        var _closeMatch = _slicedToArray(closeMatch, 1);
+
+        close = _closeMatch[0];
         stop = i + (close.length - 1);
         break;
       }
@@ -1315,11 +1502,11 @@ function splitNextVert(str) {
     return [start === 0 ? "" : str.slice(0, start), double ? "‖" : "|", str.slice(start + (double ? 2 : 1), stop), double ? "‖" : "|", str.slice(stop + (double ? 2 : 1))];
   }
 
-  var start = str.indexOf("|"),
-      stop = start + 1,
-      rest = str.slice(start + 1),
-      double = rest.startsWith("|"),
-      re = double ? /\|\|/ : /\|/;
+  var start = str.indexOf("|");
+  var stop = start + 1;
+  var rest = str.slice(start + 1);
+  var double = rest.startsWith("|");
+  var re = double ? /\|\|/ : /\|/;
 
   if (double) {
     rest = rest.slice(1);
@@ -1330,15 +1517,15 @@ function splitNextVert(str) {
     return null;
   }
 
-  if (rest.match(/^\.?[_\^]/)) {
+  if (rest.match(/^\.?[_^]/)) {
     return null;
   }
 
   while (rest.length > 0) {
-    var split = splitNextGroup(rest),
-        head = split ? split[0] : rest,
-        tail = split ? split[4] : "",
-        match = re.exec(head);
+    var split = splitNextGroup(rest);
+    var head = split ? split[0] : rest;
+    var tail = split ? split[4] : "";
+    var match = re.exec(head);
 
     if (match) {
       return retval(start, stop + match.index, double);
@@ -1377,7 +1564,7 @@ function plus(a, b) {
 
 
 function isforcedEl(reEnd) {
-  var re = new RegExp("^(" + _lexicon.fonts.regexp.source + " ?)?" + reEnd);
+  var re = new RegExp("^(".concat(_lexicon.fonts.regexp.source, " ?)?").concat(reEnd));
   return function (str) {
     return re.exec(str);
   };
@@ -1391,13 +1578,20 @@ function isfontCommand(str) {
 }
 
 function splitfont(ascii) {
-  var typematch = isforcedIdentifier(ascii) || isforcedText(ascii),
-      font = typematch && typematch[2],
-      type = typematch && typematch[3],
-      tagname = type === '"' ? "mtext" : type === "`" ? "mi" : "";
-  var start = ascii.indexOf(type),
-      stop = start + 1 + ascii.slice(start + 1).indexOf(type),
-      fontvariant = start > 0 ? _lexicon.fonts.get(font) : "";
+  var typematch = isforcedIdentifier(ascii) || isforcedText(ascii);
+  var font = typematch && typematch[2];
+  var type = typematch && typematch[3];
+  var tagname = "";
+
+  if (type === '"') {
+    tagname = "mtext";
+  } else if (type === "`") {
+    tagname = "mi";
+  }
+
+  var start = ascii.indexOf(type);
+  var stop = start + 1 + ascii.slice(start + 1).indexOf(type);
+  var fontvariant = start > 0 ? _lexicon.fonts.get(font) : "";
   return {
     tagname: tagname,
     text: ascii.slice(start + 1, stop),
