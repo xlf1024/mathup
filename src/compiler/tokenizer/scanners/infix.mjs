@@ -4,21 +4,23 @@ const INFIX_MAP = new Map([
   ["_", "sub"],
   [".^", "over"],
   ["._", "under"],
+  [":^", "presup"],
+  [":_", "presub"]
 ]);
 
 export default function(char, input, { start }) {
-  if (char === ".") {
+  if (char === "." || char === ":") {
     const next = input[start + 1];
-    const infix = INFIX_MAP.get(`.${next}`);
+    const infix = INFIX_MAP.get(`${char}${next}`);
 
     if (infix) {
       const nextnext = input[start + 2];
 
-      if (infix === ".^" && nextnext === "^") {
+      if ((infix === ".^" || infix === ":^") && nextnext === "^") {
         return null;
       }
 
-      if (infix === "._") {
+      if (infix === "._" || infix === ":_") {
         if (
           (nextnext === "_" && input[start + 3] === "|") ||
           (nextnext === "|" && input[start + 3] === "_")

@@ -39,6 +39,25 @@ test("infix modified", t => {
   );
 });
 
+test("infix with prescripts", t => {
+  const tokenize = tokenizer();
+
+  t.deepEqual(
+    [...tokenize("a:_b // 2:^3")],
+    [
+      { type: "ident", value: "a" },
+      { type: "infix", value: "presub" },
+      { type: "ident", value: "b" },
+      { type: "space", value: " " },
+      { type: "operator", value: "⁄", attrs: undefined },
+      { type: "space", value: " " },
+      { type: "number", value: "2" },
+      { type: "infix", value: "presup" },
+      { type: "number", value: "3" },
+    ],
+  );
+});
+
 test("operators", t => {
   const tokenize = tokenizer();
 
