@@ -76,8 +76,31 @@ function maybeApplyUnderOver(node) {
   return mutated;
 }
 
+function maybePrescript(node){
+  if(node.name === "presub" || node.name === "presup"){
+    const mutated = {
+      type: "MultiscriptOperation",
+      name: "multiscripts",
+      items: [
+        node.items[0],
+        [], //sub
+        [], //sup
+        [], //presub
+        []  //presup
+      ]
+    }
+    if(node.name === "presub"){
+      mutated.items[3].push(node.items[1]);
+    }else{
+      mutated.items[4].push(node.items[1]);
+    }
+    return mutated;
+  }
+  return node;
+}
+
 function post(node) {
-  return maybeRemoveFence(maybeApplyUnderOver(node));
+  return maybeRemoveFence(maybeApplyUnderOver(maybePrescript(node)));
 }
 
 function maybeTernary(op, left, right) {

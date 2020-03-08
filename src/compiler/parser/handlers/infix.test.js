@@ -843,3 +843,289 @@ test("right associates sups deeply", t => {
   t.is(node.items[1].items[1].items[0].value, "c");
   t.is(node.items[1].items[1].items[1].value, "d");
 });
+
+test("empty presup", t => {
+  const tokens = [{ type: "infix", value: "presup" }];
+  const { end, node } = infix({ start: 0, stack: [], tokens });
+
+  t.true(end >= tokens.length);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].type, "Term");
+  t.is(node.items[0].items.length, 0);
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "Term");
+  t.is(node.items[4][0].items.length, 0);
+});
+
+test("leading presub", t => {
+  const tokens = [
+    { type: "infix", value: "presub" },
+    { type: "ident", value: "a" },
+  ];
+  const { end, node } = infix({ start: 0, stack: [], tokens });
+
+  t.is(end, 2);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].type, "Term");
+  t.is(node.items[0].items.length, 0);
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 1);
+  t.is(node.items[3][0].type, "IdentLiteral");
+  t.is(node.items[3][0].value, "a");
+  t.is(node.items[4].length, 0);
+});
+
+test("presup with space after", t => {
+  const tokens = [
+    { type: "ident", value: "a" },
+    { type: "infix", value: "presup" },
+    { type: "space", value: " " },
+    { type: "ident", value: "b" },
+    { type: "ident", value: "c" },
+    { type: "space", value: " " },
+    { type: "what.ever", value: "don’t matter" },
+  ];
+
+  const stack = [{ type: "IdentLiteral", value: "a" }];
+
+  const { end, node } = infix({ start: 1, stack, tokens });
+
+  t.is(end, 5);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].type, "IdentLiteral");
+  t.is(node.items[0].value, "a");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "Term");
+  t.is(node.items[4][0].items.length, 2);
+});
+
+test("removes fences around presup exponents", t => {
+  const tokens = [
+    { type: "paren.open", value: "(" },
+    { type: "ident", value: "a" },
+    { type: "ident", value: "b" },
+    { type: "paren.close", value: ")" },
+    { type: "infix", value: "presup" },
+    { type: "paren.open", value: "(" },
+    { type: "ident", value: "c" },
+    { type: "ident", value: "d" },
+    { type: "paren.close", value: ")" },
+    { type: "what.ever", value: "don’t matter" },
+  ];
+
+  const stack = [
+    {
+      type: "FencedGroup",
+      items: [
+        [
+          { type: "IdentLiteral", value: "a" },
+          { type: "IdentLiteral", value: "b" },
+        ],
+      ],
+      attrs: {
+        open: "(",
+        close: ")",
+      },
+    },
+  ];
+
+  const { end, node } = infix({ start: 4, stack, tokens });
+
+  t.is(end, 9);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].type, "FencedGroup");
+  t.is(node.items[0].attrs.open, "(");
+  t.is(node.items[0].attrs.close, ")");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "Term");
+  t.is(node.items[4][0].items.length, 2);
+  t.is(node.items[4][0].items[0].value, "c");
+  t.is(node.items[4][0].items[1].value, "d");
+});
+
+test("but keeps a singleton exponent in fences (for presup)", t => {
+  const tokens = [
+    { type: "ident", value: "a" },
+    { type: "infix", value: "presup" },
+    { type: "paren.open", value: "(" },
+    { type: "ident", value: "c" },
+    { type: "paren.close", value: ")" },
+    { type: "what.ever", value: "don’t matter" },
+  ];
+
+  const stack = [{ type: "IdentLiteral", value: "a" }];
+  const { end, node } = infix({ start: 1, stack, tokens });
+
+  t.is(end, 5);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].value, "a");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "FencedGroup");
+  t.is(node.items[4][0].attrs.open, "(");
+  t.is(node.items[4][0].attrs.close, ")");
+});
+
+test("but keeps multi-celled in fences (for presub)", t => {
+  const tokens = [
+    { type: "ident", value: "a" },
+    { type: "infix", value: "presub" },
+    { type: "paren.open", value: "(" },
+    { type: "ident", value: "b" },
+    { type: "sep.col", value: "," },
+    { type: "ident", value: "c" },
+    { type: "paren.close", value: ")" },
+    { type: "what.ever", value: "don’t matter" },
+  ];
+
+  const stack = [{ type: "IdentLiteral", value: "a" }];
+  const { end, node } = infix({ start: 1, stack, tokens });
+
+  t.is(end, 7);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].value, "a");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 1);
+  t.is(node.items[3][0].type, "FencedGroup");
+  t.is(node.items[3][0].attrs.open, "(");
+  t.is(node.items[3][0].attrs.close, ")");
+  t.is(node.items[4].length, 0);
+});
+
+
+test("right associates presups", t => {
+  const tokens = [
+    { type: "ident", value: "a" },
+    { type: "infix", value: "presup" },
+    { type: "ident", value: "b" },
+    { type: "infix", value: "presup" },
+    { type: "ident", value: "c" },
+  ];
+
+  const stack = [
+    {
+      type: "MultiscriptOperation",
+      name: "multiscripts",
+      items: [
+        { type: "IdentLiteral", value: "a" },
+        [],
+        [],
+        [],
+        [],
+        [
+          { type: "IdentLiteral", value: "b" }
+        ],
+      ],
+    },
+  ];
+
+  const { end, node } = infix({ start: 3, stack, tokens });
+
+  t.is(end, 5);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].value, "a");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "MultiscriptOperation");
+  t.is(node.items[4][0].name, "multiscripts");
+  t.is(node.items[4][0].items.length, 5);
+  t.is(node.items[4][0].items[0].value, "b");
+  t.is(node.items[4][0].items[1].length, 0);
+  t.is(node.items[4][0].items[2].length, 0);
+  t.is(node.items[4][0].items[3].length, 0);
+  t.is(node.items[4][0].items[4].length, 1);
+  t.is(node.items[4][0].items[4][0].value, "c");
+});
+
+test("right associates presups deeply", t => {
+  const tokens = [
+    { type: "ident", value: "a" },
+    { type: "infix", value: "presup" },
+    { type: "ident", value: "b" },
+    { type: "infix", value: "presup" },
+    { type: "ident", value: "c" },
+    { type: "infix", value: "presup" },
+    { type: "ident", value: "d" },
+  ];
+
+  const stack = [
+    {
+      type: "MultiscriptOperation",
+      name: "multiscripts",
+      items: [
+        { type: "IdentLiteral", value: "a" },
+        [],
+        [],
+        [],
+        [
+          {
+            type: "BinaryOperation",
+            name: "presup",
+            items: [
+              { type: "IdentLiteral", value: "b" },
+              { type: "IdentLiteral", value: "c" },
+            ],
+          },
+        ],
+      ],
+    },
+  ];
+
+  const { end, node } = infix({ start: 5, stack, tokens });
+
+  t.is(end, 7);
+  t.is(node.type, "MultiscriptOperation");
+  t.is(node.name, "multiscripts");
+  t.is(node.items.length, 5);
+  t.is(node.items[0].value, "a");
+  t.is(node.items[1].length, 0);
+  t.is(node.items[2].length, 0);
+  t.is(node.items[3].length, 0);
+  t.is(node.items[4].length, 1);
+  t.is(node.items[4][0].type, "MultiscriptOperation");
+  t.is(node.items[4][0].name, "multiscripts");
+  t.is(node.items[4][0].items.length, 5);
+  t.is(node.items[4][0].items[0].value, "b");
+  t.is(node.items[4][0].items[1].length, 0);
+  t.is(node.items[4][0].items[2].length, 0);
+  t.is(node.items[4][0].items[3].length, 0);
+  t.is(node.items[4][0].items[4].length, 1);
+  t.is(node.items[4][0].items[4][0].type, "MultiscriptOperation");
+  t.is(node.items[4][0].items[4][0].name, "multiscripts");
+  t.is(node.items[4][0].items[4][0].items.length, 5);
+  t.is(node.items[4][0].items[4][0].items[0].value, "c");
+  t.is(node.items[4][0].items[4][0].items[1].length, 0);
+  t.is(node.items[4][0].items[4][0].items[2].length, 0);
+  t.is(node.items[4][0].items[4][0].items[3].length, 0);
+  t.is(node.items[4][0].items[4][0].items[4].length, 1);
+  t.is(node.items[4][0].items[4][0].items[4][0].value, "d");
+});
